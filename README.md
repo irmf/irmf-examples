@@ -108,6 +108,10 @@ This repo is dedicated to examples showcasing IRMF examples.
 
 [![025-patterns](examples/025-patterns/sphered-1.png)](examples/025-patterns)
 
+* [027-libfive](examples/027-libfive)
+
+[![027-libfive](examples/027-libfive/libfive-1.png)](examples/027-libfive)
+
 Note that to reduce the size of this repo, STL files are no longer generally
 retained except for exceptional cases. :smile:
 
