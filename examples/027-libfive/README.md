@@ -56,6 +56,8 @@ The second [libfive example](https://libfive.com/examples/#scheme):
 
 could look like this in IRMF:
 
+![libfive-2.png](libfive-2.png)
+
 ```glsl
 float cube(in vec3 xyz) {
   if (any(greaterThan(abs(xyz), vec3(1)))) { return 0.0; }
