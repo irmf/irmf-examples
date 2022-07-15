@@ -38,6 +38,43 @@ void mainModel4(out vec4 m, in vec3 xyz) {
 
 * Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
+## Scheme (low-level)
+
+The second [libfive example](https://libfive.com/examples/#scheme):
+
+```scheme
+(define-shape (cube x y z)
+  (max (- x 1) (- -1 x)
+       (- y 1) (- -1 y)
+       (- z 1) (- -1 z)))
+
+(remap-shape (cube x y z)
+  (+ (* (cos z) x) (* (sin z) y))
+  (- (* (cos z) y) (* (sin z) x))
+  z)
+```
+
+could look like this in IRMF:
+
+```glsl
+float cube(in vec3 xyz) {
+  if (any(greaterThan(abs(xyz), vec3(1)))) { return 0.0; }
+  return 1.0;
+}
+
+void mainModel4(out vec4 m, in vec3 xyz) {
+  float cz = cos(xyz.z);
+  float sz = sin(xyz.z);
+  vec3 twist = vec3(cz*xyz.x + sz*xyz.y, cz*xyz.y-sz*xyz.x, xyz.z);
+  m[0] = cube(twist);
+}
+```
+
+* Try loading [libfive-2.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/027-libfive/libfive-2.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
+
 ----------------------------------------------------------------------
 
 # License
