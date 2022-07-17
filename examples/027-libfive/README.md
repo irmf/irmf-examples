@@ -76,6 +76,55 @@ void mainModel4(out vec4 m, in vec3 xyz) {
 
 * Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
+## CSG blend
+
+The third [libfive example](https://libfive.com/examples/#scheme):
+
+```scheme
+(define (blend a b m)
+  (min a b (+ (sqrt (abs a))
+              (sqrt (abs b))
+              (- m)) ))
+
+(blend
+  (blend (sphere 1 [0 -1 -1])
+         (sphere 1 [0  1 -1]) 0.75)
+  (blend (sphere 1 [0 -1  1])
+         (sphere 1 [0  1  1]) 0.75)
+         0.75)
+```
+
+could look like this in IRMF:
+
+![libfive-3.png](libfive-3.png)
+
+```glsl
+float sphere(in float radius, in vec3 center, in vec3 xyz) {
+  return length(center-xyz) - radius;
+}
+
+float blend(in float a, in float b, in float m) {
+  float v = sqrt(abs(a)) + sqrt(abs(b)) - m;
+  return min(a, min(b, v));
+}
+
+void mainModel4(out vec4 m, in vec3 xyz) {
+  float v =
+    blend(
+      blend(
+        sphere(1.0, vec3(0,-1,-1), xyz),
+        sphere(1.0, vec3(0, 1,-1), xyz), 0.75),
+      blend(
+        sphere(1.0, vec3(0,-1, 1), xyz),
+        sphere(1.0, vec3(0, 1, 1), xyz), 0.75),
+      0.75);
+  m[0] = v > 0.01 ? 0.0 : 1.0;
+}
+```
+
+* Try loading [libfive-3.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/027-libfive/libfive-3.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ----------------------------------------------------------------------
 
