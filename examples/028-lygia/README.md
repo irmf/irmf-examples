@@ -1,6 +1,6 @@
 # 028-lygia
 
-Here are examples of using the Lygia Shader Library with IRMF.
+Here are examples of using the [Lygia Shader Library](https://lygia.xyz/) with [IRMF](https://irmf.io/).
 
 ## lygia-01.irmf
 
