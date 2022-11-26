@@ -112,6 +112,10 @@ This repo is dedicated to examples showcasing IRMF examples.
 
 [![027-libfive](examples/027-libfive/libfive-1.png)](examples/027-libfive)
 
+* [028-lygia](examples/028-lygia)
+
+[![028-lygia](examples/028-lygia/lygia-01.png)](examples/028-lygia)
+
 Note that to reduce the size of this repo, STL files are no longer generally
 retained except for exceptional cases. :smile:
 

@@ -1,0 +1,38 @@
+/*{
+  "author": "Glenn M. Lewis",
+  "copyright": "Apache-2.0",
+  "date": "2022-11-25",
+  "irmf": "1.0",
+  "materials": ["copper"],
+  "max": [4,3,4],
+  "min": [-4,-3,-4],
+  "notes": "Simple IRMF shader - lygia-01.",
+  "options": {},
+  "title": "lygia-01",
+  "units": "mm",
+  "version": "1.0"
+}*/
+
+#define FNC_SATURATE
+#include "lygia/space/ratio.glsl"
+#include "lygia/sdf.glsl"
+
+vec4 raymarchMap(in vec3 pos){
+  vec4 res=vec4(1.);
+  
+  res=opUnion(res,vec4(1.,1.,1.,sphereSDF(pos-vec3(0.,.60,0.),.5)));
+  res=opUnion(res,vec4(0.,1.,1.,boxSDF(pos-vec3(2.,.5,0.),vec3(.4))));
+  res=opUnion(res,vec4(.3,.3,1.,torusSDF(pos-vec3(0.,.5,2.),vec2(.4,.1))));
+  res=opUnion(res,vec4(.3,.1,.3,capsuleSDF(pos,vec3(-2.3,.4,-.2),vec3(-1.6,.75,.2),.2)));
+  res=opUnion(res,vec4(.5,.3,.4,triPrismSDF(pos-vec3(-2.,.50,-2.),vec2(.5,.1))));
+  res=opUnion(res,vec4(.2,.2,.8,cylinderSDF(pos-vec3(2.,.50,-2.),vec2(.2,.4))));
+  res=opUnion(res,vec4(.7,.5,.2,coneSDF(pos-vec3(0.,.75,-2.),vec3(.8,.6,.6))));
+  res=opUnion(res,vec4(.4,.2,.9,hexPrismSDF(pos-vec3(-2.,.60,2.),vec2(.5,.1))));
+  res=opUnion(res,vec4(.1,.3,.6,pyramidSDF(pos-vec3(2.,.10,2.),1.)));
+  
+  return res;
+}
+
+void mainModel4(out vec4 materials,in vec3 xyz){
+  materials=smoothstep(vec4(1),vec4(.5),raymarchMap(xyz));
+}
