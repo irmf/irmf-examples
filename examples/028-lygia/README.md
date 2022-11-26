@@ -4,6 +4,8 @@ Here are examples of using the Lygia Shader Library with IRMF.
 
 ## lygia-01.irmf
 
+![lygia-01.png](lygia-01.png)
+
 ```glsl
 /*{
   irmf: "1.0",
