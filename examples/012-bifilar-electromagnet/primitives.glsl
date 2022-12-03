@@ -8,21 +8,6 @@ float box(vec3 start, vec3 end, float size, in vec3 xyz) {
   return 1.0;
 }
 
-mat3 rotAxis(vec3 axis, float a) {
-  // This is from: http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
-  float s = sin(a);
-  float c = cos(a);
-  float oc = 1.0 - c;
-  vec3 as = axis * s;
-  mat3 p = mat3(axis.x * axis, axis.y * axis, axis.z * axis);
-  mat3 q = mat3(c, - as.z, as.y, as.z, c, - as.x, - as.y, as.x, c);
-  return p * oc + q;
-}
-
-mat4 rotZ(float angle) {
-  return mat4(rotAxis(vec3(0, 0, 1), angle));
-}
-
 float wire(vec3 start, vec3 end, float size, in vec3 xyz) {
   vec3 v = end - start;
   float angle = dot(v, vec3(1, 0, 0));
