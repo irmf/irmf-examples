@@ -57,6 +57,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [cubed-1.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/025-patterns/cubed-1.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## sphered-1.irmf
 
 Here is the [IRMF logo](https://github.com/gmlewis/irmf/tree/master/examples/002-cube#irmf-logo-model-1irmf)
@@ -97,6 +99,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 ```
 
 * Try loading [sphered-1.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/025-patterns/sphered-1.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ----------------------------------------------------------------------
 

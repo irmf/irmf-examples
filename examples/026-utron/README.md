@@ -57,6 +57,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [half-utron-1.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/026-utron/half-utron-1.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ----------------------------------------------------------------------
 
 # License

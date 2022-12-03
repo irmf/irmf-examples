@@ -29,6 +29,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [cube-1.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/002-cube/cube-1.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## cube-2.irmf
 
 You would probably never write a shader like `cube-1.irmf`. It is just showing
@@ -70,6 +72,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [cube-2.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/002-cube/cube-2.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## cube-3.irmf
 
 `cube-2.irmf` has the drawback that it can't be rotated. Let's make a
@@ -105,6 +109,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 ```
 
 * Try loading [cube-3.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/002-cube/cube-3.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ## cube-csg.irmf
 

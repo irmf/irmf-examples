@@ -42,7 +42,7 @@ and here's an animation of the slices of the electromagnet:
   irmf: "1.0",
   materials: ["copper","copper","dielectric"],
   max: [25,25,71],
-  min: [-25,-25,-61],
+  min: [-25,-25,-63],
   units: "mm",
 }*/
 
@@ -65,21 +65,21 @@ float coilSquareFace(float radius, float size, float gap, float nTurns, float tr
   float lastHelixZ = angle * (size + gap);
   float coilNum = 0.0;
   if (lastHelixZ > dz) {
-    lastHelixZ -= (size + gap);  // center of current coil.
+    lastHelixZ -= (size + gap); // center of current coil.
     coilNum = -1.0;
   }
-  float nextHelixZ = lastHelixZ + (size + gap);  // center of next higher vertical coil.
+  float nextHelixZ = lastHelixZ + (size + gap); // center of next higher vertical coil.
   
   // If the current point is within the gap between the two coils, reject it.
   if (dz > lastHelixZ + 0.5 * size && dz < nextHelixZ - 0.5 * size) { return 0.0; }
   
   coilNum += floor((xyz.z + (0.5 * size) - lastHelixZ) / (size + gap));
-
+  
   // If the current point is in a coil numbered outside the current range, reject it.
   if (coilNum < 0.0 || coilNum >= nTurns) { return 0.0; }
-
+  
   // TODO: Incorporate the trimEndAngle.
-
+  
   return 1.0;
 }
 
@@ -178,9 +178,9 @@ vec3 bifilarElectromagnet(int numPairs, float innerRadius, float size, float gap
   float metal1 = 0.0;
   float metal2 = 0.0;
   
-  for(int i = 1; i <= numCoils; i+=2) {
+  for(int i = 1; i <= numCoils; i += 2) {
     metal1 += coilPlusConnectorWires(i, numCoils, inc, innerRadius, connectorRadius, size, gap, nTurns, xyz);
-    metal2 += coilPlusConnectorWires(i+1, numCoils, inc, innerRadius, connectorRadius, size, gap, nTurns, xyz);
+    metal2 += coilPlusConnectorWires(i + 1, numCoils, inc, innerRadius, connectorRadius, size, gap, nTurns, xyz);
   }
   metal1 = clamp(metal1, 0.0, 1.0);
   metal2 = clamp(metal2, 0.0, 1.0);
@@ -196,19 +196,27 @@ vec3 bifilarElectromagnet(int numPairs, float innerRadius, float size, float gap
   dielectric = clamp(dielectric, 0.0, 1.0);
   // This next step is important... we don't want any dielectric material wherever
   // the metal is located, so we just subtract the metal out of the dielectric.
-  dielectric -= clamp(metal1+metal2, 0.0, 1.0);
+  dielectric -= clamp(metal1 + metal2, 0.0, 1.0);
   
   return vec3(metal1, metal2, dielectric);
 }
 
+const float innerRadius = 3.0;
+const float wireSize = 0.85; // mm
+const float wireGap = 0.15; // mm
+const int turnsPerCoil = 122;
+const int numCoilPairs = 10;
+
 void mainModel4(out vec4 materials, in vec3 xyz) {
-  int numTurns = 122;
-  xyz.z += 60.0;
-  materials.xyz = bifilarElectromagnet(10, 3.0, 0.85, 0.15, numTurns, xyz);
+  const float wireSpacing = wireSize + wireGap;
+  xyz.z += float(turnsPerCoil) * wireSpacing / 2.0;
+  materials.xyz = bifilarElectromagnet(numCoilPairs, innerRadius, wireSize, wireGap, turnsPerCoil, xyz);
 }
 ```
 
 * Try loading [bifilar-electromagnet-1.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/012-bifilar-electromagnet/bifilar-electromagnet-1.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ## axial-radial-bifilar-electromagnet-1.irmf
 
@@ -583,6 +591,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [full-coil-metal-only.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/012-bifilar-electromagnet/full-coil-metal-only.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## full-coil-metal-with-dielectric.irmf
 
 Here is the full model with metal and dielectric:
@@ -764,6 +774,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 ```
 
 * Try loading [full-coil-metal-with-dielectric.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/012-bifilar-electromagnet/full-coil-metal-with-dielectric.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ## axial+radial-bifilar-electromagnet-with-solid-core.irmf
 
@@ -949,6 +961,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [axial+radial-bifilar-electromagnet-with-solid-core.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/012-bifilar-electromagnet/axial+radial-bifilar-electromagnet-with-solid-core.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## axial+radial-bifilar-electromagnet-with-solid-core-rot90.irmf
 
 Here is the same model, rotated to the horizontal:
@@ -1131,6 +1145,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 ```
 
 * Try loading [axial+radial-bifilar-electromagnet-with-solid-core-rot90.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/012-bifilar-electromagnet/axial+radial-bifilar-electromagnet-with-solid-core-rot90.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ----------------------------------------------------------------------
 

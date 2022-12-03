@@ -96,6 +96,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 
 * Try loading [superquad-ellipsoids-2.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/022-superquadrics/superquad-ellipsoids-2.irmf) now in the experimental IRMF editor!
 
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
+
 ## superquad-toroids-1.irmf
 
 This is a replication of Figure 10 in Al Barr's article linked above.
@@ -191,6 +193,8 @@ void mainModel4(out vec4 materials, in vec3 xyz) {
 ```
 
 * Try loading [superquad-toroids-2.irmf](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/examples/022-superquadrics/superquad-toroids-2.irmf) now in the experimental IRMF editor!
+
+* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
 ## sphericon-1.irmf
 

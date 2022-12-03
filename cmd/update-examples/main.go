@@ -121,7 +121,7 @@ func processReadme(path, buf string, irmfs map[string]string, stlFileSizes map[s
 		filename := v[:index+5]
 		glsl, ok := irmfs[filename]
 		if !ok {
-			log.Fatalf("Could not find file %v", filename)
+			log.Fatalf("Could not find file %v, path=%q", filename, path)
 		}
 		glslIndex := strings.Index(v, "```glsl")
 		if glslIndex < 0 {
@@ -132,11 +132,7 @@ func processReadme(path, buf string, irmfs map[string]string, stlFileSizes map[s
 			licenseText = v[j:] // Preserve year of original license text.
 		}
 
-		parts[i] = "## " + v[0:glslIndex+8] + glsl + "```\n\n" + tryMessage(path, filename)
-
-		if len(stlFileSizes) > 0 {
-			parts[i] += addSTLs(filename, stlFileSizes)
-		}
+		parts[i] = "## " + v[0:glslIndex+8] + glsl + "```\n\n" + tryMessage(path, filename) + addSlicerMessage(filename)
 
 		if len(dlpFileSizes) > 0 {
 			parts[i] += addDLPs(filename, dlpFileSizes)
@@ -150,23 +146,8 @@ func processReadme(path, buf string, irmfs map[string]string, stlFileSizes map[s
 	}
 }
 
-func addSTLs(filename string, stlFileSizes map[string]int64) string {
-	var lines []string
-
-	// Strip off the ".irmf"
-	filename = strings.TrimSuffix(filename, ".irmf")
-
-	for k, v := range stlFileSizes {
-		if strings.HasPrefix(k, filename+"-mat") {
-			lines = append(lines, fmt.Sprintf("  - [%v](%v) (%v bytes)", k, k, v))
-		}
-	}
-
-	if len(lines) == 0 {
-		return ""
-	}
-
-	return := "\n* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.\n"
+func addSlicerMessage(filename string) string {
+	return "\n* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.\n"
 }
 
 func addDLPs(filename string, dlpFileSizes map[string]int64) string {
@@ -195,7 +176,7 @@ func addDLPs(filename string, dlpFileSizes map[string]int64) string {
 }
 
 func tryMessage(path, filename string) string {
-	return fmt.Sprintf(`* Try loading [%v](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf/blob/master/%v/%v) now in the experimental IRMF editor!`+"\n", filename, path, filename)
+	return fmt.Sprintf(`* Try loading [%v](https://gmlewis.github.io/irmf-editor/?s=github.com/gmlewis/irmf-examples/blob/master/%v/%v) now in the experimental IRMF editor!`+"\n", filename, path, filename)
 }
 
 var fieldsToKeep = []string{

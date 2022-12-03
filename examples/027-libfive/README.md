@@ -8,7 +8,7 @@ with IRMF.
 Here is an adaptation of [libfive examples](https://libfive.com/examples)
 in IRMF.
 
-## Scheme (high-level)
+## libfive-1.irmf - Scheme (high-level)
 
 This [libfive example](https://libfive.com/examples/#stdlib):
 
@@ -25,6 +25,28 @@ can easily be translated to IRMF:
 ![libfive-1.png](libfive-1.png)
 
 ```glsl
+/*{
+  irmf: "1.0",
+  materials: ["PLA1"],
+  max: [1,1,1],
+  min: [-1,-1,-1],
+  units: "mm",
+}*/
+
+float sphere(in float radius, in vec3 center, in vec3 xyz) {
+  float r = length(xyz-center);
+  if (r > radius) { return 0.0; }
+  return 1.0;
+}
+
+float cylinder_z(in float radius, in float height, in vec3 center, in vec3 xyz) {
+  float h = length(xyz.z - center.z);
+  if (h > height) { return 0.0; }
+  float r = length(xyz.xy - center.xy);
+  if (r > radius) { return 0.0; }
+  return 1.0;
+}
+
 void mainModel4(out vec4 m, in vec3 xyz) {
   m[0] = sphere(1.0, vec3(0), xyz);
   m[0] -= sphere(0.6, vec3(0), xyz);
@@ -38,7 +60,7 @@ void mainModel4(out vec4 m, in vec3 xyz) {
 
 * Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
-## Scheme (low-level)
+## libfive-2.irmf - Scheme (low-level)
 
 The second [libfive example](https://libfive.com/examples/#scheme):
 
@@ -59,6 +81,14 @@ could look like this in IRMF:
 ![libfive-2.png](libfive-2.png)
 
 ```glsl
+/*{
+  irmf: "1.0",
+  materials: ["PLA1"],
+  max: [3,3,3],
+  min: [-3,-3,-3],
+  units: "mm",
+}*/
+
 float cube(in vec3 xyz) {
   if (any(greaterThan(abs(xyz), vec3(1)))) { return 0.0; }
   return 1.0;
@@ -76,7 +106,7 @@ void mainModel4(out vec4 m, in vec3 xyz) {
 
 * Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.
 
-## CSG blend
+## libfive-3.irmf - CSG blend
 
 The third [libfive example](https://libfive.com/examples/#scheme):
 
@@ -99,6 +129,14 @@ could look like this in IRMF:
 ![libfive-3.png](libfive-3.png)
 
 ```glsl
+/*{
+  irmf: "1.0",
+  materials: ["PLA1"],
+  max: [2,2,2],
+  min: [-2,-2,-2],
+  units: "mm",
+}*/
+
 float sphere(in float radius, in vec3 center, in vec3 xyz) {
   return length(center-xyz) - radius;
 }
