@@ -8,8 +8,9 @@
 // the metal (with suffic "-dielectric.stl" instead of ".stl".
 //
 // Usage:
-//   go run aprbfem.go -h
-//   go run aprbfem.go -out aprbfem.stl
+//
+//	go run aprbfem.go -h
+//	go run aprbfem.go -out aprbfem.stl
 package main
 
 import (
@@ -20,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/gmlewis/go3d/vec3"
-	"github.com/gmlewis/irmf-slicer/stl"
+	"github.com/gmlewis/irmf-slicer/v3/stl"
 )
 
 var (

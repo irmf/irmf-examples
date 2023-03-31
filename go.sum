@@ -1,0 +1,4 @@
+github.com/gmlewis/go3d v0.0.2 h1:VtNVF1b9nW557xcIXoEYMVVprnKn6Iul/8IUbYeOMNM=
+github.com/gmlewis/go3d v0.0.2/go.mod h1:NQ7fN6W+8Nu+SEsFWMpMhy6IZlRBMb4hAwItuxqNMz0=
+github.com/gmlewis/irmf-slicer/v3 v3.5.0 h1:h+KamvyzOVYjduDrQHGgyj2TfJgjxVjafVh/t9nwDpY=
+github.com/gmlewis/irmf-slicer/v3 v3.5.0/go.mod h1:uFvBpKumvobIohLmLNlVO7GZYqGznfnMQX0n3D/abh8=
