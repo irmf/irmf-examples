@@ -121,6 +121,14 @@ type arBifilarElectromagnet struct {
 	debotP1ui *vec3.T
 
 	lowerConnectors map[string]*connector
+
+	// used to handle special case:
+	conP1do *vec3.T
+	conP1uo *vec3.T
+	conP0do *vec3.T
+	conP0uo *vec3.T
+	extP0do *vec3.T
+	extP0uo *vec3.T
 }
 
 type connector struct {
@@ -207,9 +215,10 @@ func (m *arBifilarElectromagnet) coilPlusConnectorWires(wireNum, coilNum int) {
 	m.firstCoilWireSegment(wireNum, coilNum, spacingAngle, angle+spacingAngle, ri, ro)
 
 	for i := 0; i < *numDivs**numTurns; i, angle, dielAngle = i+1, angle+delta, dielAngle+dielDelta {
-		m.coilWireSegment(wireNum, coilNum, angle+spacingAngle, angle+delta+spacingAngle, ri, ro)
+		lastSegment := i == *numDivs**numTurns-1
+		m.coilWireSegment(wireNum, coilNum, angle+spacingAngle, angle+delta+spacingAngle, ri, ro, lastSegment)
 		m.coilDielSegment(wireNum, coilNum, dielAngle+spacingAngle, dielAngle+dielDelta+spacingAngle, ri, ro)
-		if i == *numDivs**numTurns-1 {
+		if lastSegment {
 			m.lastCoilWireSegment(wireNum, coilNum, angle+spacingAngle, angle+delta+spacingAngle, ri, ro)
 		}
 	}
@@ -243,6 +252,14 @@ func (m *arBifilarElectromagnet) metalQuad(v1, v2, v3, v4 *vec3.T) (*vec3.T, *ve
 	n2.Normalize()
 	m.w1.writeTri(&n2, v1, v3, v4)
 	return &n1, &n2
+}
+
+func (m *arBifilarElectromagnet) metalTri(v1, v2, v3 *vec3.T) *vec3.T {
+	v31 := cp(v3).Sub(v1)
+	n1 := vec3.Cross(cp(v2).Sub(v1), v31)
+	n1.Normalize()
+	m.w1.writeTri(&n1, v1, v2, v3)
+	return &n1
 }
 
 func (m *arBifilarElectromagnet) dielQuad(v1, v2, v3, v4 *vec3.T) (*vec3.T, *vec3.T) {
@@ -317,7 +334,7 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 	n := vec3.Cross(cp(p0di).Sub(p0do), cp(p0ui).Sub(p0do))
 	n.Normalize()
 
-	// inner upward connector
+	// inner upward (connector-side) connector
 	m.metalQuad(p0do, p0di, p0ui, p0uo)       // end-cap
 	m.metalQuad(p0uo, p0ui, adjP1ui, adjP1uo) // upward
 	m.metalQuad(p0ui, p0di, adjP1di, adjP1ui) // inner
@@ -371,7 +388,7 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 	outP1uoWithRod[2] = zu
 	outP1doWithRod[2] = zd
 
-	// lower connection to outer axial connector
+	// lower (non-connector-side) connection to outer axial connector
 	m.metalQuad(outP0doWithRod, outP0di, outP0ui, outP0uoWithRod)               // end-cap
 	m.metalQuad(outP0di, p0do, p0uo, outP0ui)                                   // end-cap connector
 	m.metalQuad(outP0uoWithRod, outP1uoWithRod, outP1doWithRod, outP0doWithRod) // outer
@@ -436,6 +453,16 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 	}
 
 	// axial connector on the outside of the coil
+	// if coilNum == 1 && wireNum == 2 {
+	// 	log.Printf("botP0ui=%#v", botP0ui)
+	// 	log.Printf("botP0uoWithRod=%#v", botP0uoWithRod)
+	// 	log.Printf("botP1ui=%#v", botP1ui)
+	// 	log.Printf("botP1uoWithRod=%#v", botP1uoWithRod)
+	// 	log.Printf("outP0di=%#v", outP0di)
+	// 	log.Printf("outP0doWithRod=%#v", outP0doWithRod)
+	// 	log.Printf("outP1di=%#v", outP1di)
+	// 	log.Printf("outP1doWithRod=%#v", outP1doWithRod)
+	// }
 	m.metalQuad(botP0uoWithRod, botP0ui, outP0di, outP0doWithRod)               // forward (was end-cap)
 	m.metalQuad(outP0doWithRod, outP1doWithRod, botP1uoWithRod, botP0uoWithRod) // outer
 	m.metalQuad(botP1uoWithRod, outP1doWithRod, outP1di, botP1ui)               // backface
@@ -475,12 +502,6 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 		return
 	}
 
-	// angle connector
-	m.metalQuad(botP0doWithRod, botP0di, botP0ui, botP0uoWithRod)               // forward (was end-cap)
-	m.metalQuad(botP1doWithRod, botP0doWithRod, botP0uoWithRod, botP1uoWithRod) // outer
-	m.metalQuad(botP1doWithRod, botP1uoWithRod, botP1ui, botP1di)               // backface
-	m.metalQuad(botP1doWithRod, botP1di, botP0di, botP0doWithRod)               // end cap
-
 	// dielectric
 	m.dielQuad(debotP0do, debotP0di, debotP0ui, debotP0uo) // forward (was end-cap)
 	m.dielQuad(debotP1do, debotP0do, debotP0uo, debotP1uo) // outer
@@ -504,15 +525,45 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 	conP1uo[2] = botP1uo[2]
 	conP1do[2] = botP1do[2]
 
-	// radial connector
-	// m.metalQuad(botP0do, botP0di, botP0ui, botP0uo) // end-cap
-	m.metalQuad(botP0di, conP0do, conP0uo, botP0ui) // end-cap connector
-	// m.metalQuad(botP0uo, botP1uo, botP1do, botP0do) // outer
-	m.metalQuad(botP0ui, conP0uo, conP1uo, botP1ui) // upward connector
-	// m.metalQuad(botP0uo, botP0ui, botP1ui, botP1uo) // upward
-	m.metalQuad(botP0di, botP1di, conP1do, conP0do) // downward
-	// m.metalQuad(botP1do, botP1uo, botP1ui, botP1di) // backface
-	m.metalQuad(botP1di, botP1ui, conP1uo, conP1do) // backface connector
+	// radial connector (connection-side) that bridges the thickness difference between the
+	// inner connector to the outer connector.
+	if coilNum == 1 && wireNum == 2 {
+		// special case - connect to top-most connector - one connector instead of 2
+		// log.Printf("radial connector: botP0di=%#v, botP0ui=%#v", botP0di, botP0ui)
+		// log.Printf("radial connector: botP1di=%#v, botP1ui=%#v", botP1di, botP1ui)
+		// log.Printf("radial connector: conP0do=%#v, conP0uo=%#v", conP0do, conP0uo)
+		// log.Printf("radial connector: conP1do=%#v, conP1uo=%#v", conP1do, conP1uo)
+		m.metalQuad(botP0doWithRod, conP0do, conP0uo, botP0uoWithRod)               // forward (left side - was end-cap)
+		m.metalQuad(botP1doWithRod, botP0doWithRod, botP0uoWithRod, botP1uoWithRod) // outer
+		m.metalQuad(botP1doWithRod, botP1uoWithRod, conP1uo, conP1do)               // backface
+		m.metalQuad(botP1doWithRod, conP1do, conP0do, botP0doWithRod)               // end cap
+		// fill in the gaps with two triangles and a quad:
+		// radial connector: botP0di=&vec3.T{-19.676147, -5.302788, 59.23642}, botP0ui=&vec3.T{-19.676147, -5.302788, 58.03642}
+		// radial connector: botP1di=&vec3.T{-19.418112, -6.1812043, 59.23642}, botP1ui=&vec3.T{-19.418112, -6.1812043, 58.03642}
+		// radial connector: conP0do=&vec3.T{-19.42005, -5.080756, 59.23642}, conP0uo=&vec3.T{-19.42005, -5.080756, 58.03642}
+		// radial connector: conP1do=&vec3.T{-19.082619, -6.229455, 59.23642}, conP1uo=&vec3.T{-19.082619, -6.229455, 58.03642}
+		// conP1uo - right side toward non-connector
+		// conP0uo - left side toward non-connector
+		// botP0ui=&vec3.T{-19.676147, -5.302788, 58.03642} - middle left side
+		// botP0uoWithRod=&vec3.T{-22.042332, -5.704253, 58.03642} - most outer left side
+		// botP1ui=&vec3.T{-19.418112, -6.1812043, 58.03642} - middle right side
+		// botP1uoWithRod=&vec3.T{-21.625504, -7.123234, 58.03642} - most-outer right side
+		m.metalQuad(botP1ui, botP0ui, conP0uo, conP1uo)
+		m.metalTri(botP1uoWithRod, botP1ui, conP1uo)
+		m.metalTri(botP0uoWithRod, conP0uo, botP0ui)
+	} else {
+		// angle connector - bridge piece
+		m.metalQuad(botP0doWithRod, botP0di, botP0ui, botP0uoWithRod)               // forward (was end-cap)
+		m.metalQuad(botP1doWithRod, botP0doWithRod, botP0uoWithRod, botP1uoWithRod) // outer
+		m.metalQuad(botP1doWithRod, botP1uoWithRod, botP1ui, botP1di)               // backface
+		m.metalQuad(botP1doWithRod, botP1di, botP0di, botP0doWithRod)               // end cap
+
+		// radial connector
+		m.metalQuad(botP0di, conP0do, conP0uo, botP0ui) // end-cap connector
+		m.metalQuad(botP0ui, conP0uo, conP1uo, botP1ui) // upward connector
+		m.metalQuad(botP0di, botP1di, conP1do, conP0do) // downward
+		m.metalQuad(botP1di, botP1ui, conP1uo, conP1do) // backface connector
+	}
 
 	// dielectric
 	deconP0uo := cp(&ni01).Scale(float32(conlen)).Add(deoutP0uo)
@@ -556,10 +607,29 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 		m.coil2yIntercept = float64(botP1ui[1]) - m.coil2slope*float64(botP1ui[0])
 	}
 
-	m.metalQuad(conP0do, extP0do, extP0uo, conP0uo) // frontface connector
-	m.metalQuad(conP0do, conP1do, extP1do, extP0do) // downward connector
-	m.metalQuad(conP1do, conP1uo, extP1uo, extP1do) // backface connector
-	m.metalQuad(extP0do, extP1do, extP1uo, extP0uo) // end-cap connector
+	if coilNum == 1 && wireNum == 2 {
+		// special case - connect to top-most connector
+		// m.metalQuad(conP0do, extP0do, extP0uo, conP0uo) // frontface (radial) connector  WRONG!
+		// log.Printf("conP0do=%#v, conP0uo=%#v", conP0do, conP0uo)
+		// log.Printf("conP1do=%#v, conP1uo=%#v", conP1do, conP1uo)
+		// log.Printf("extP0do=%#v, extP0uo=%#v", extP0do, extP0uo)
+		// log.Printf("extP1do=%#v, extP1uo=%#v", extP1do, extP1uo)
+		m.conP1do = conP1do
+		m.conP1uo = conP1uo
+		m.conP0do = conP0do
+		m.conP0uo = conP0uo
+		m.extP0do = extP0do
+		m.extP0uo = extP0uo
+		m.metalQuad(conP0do, conP1do, extP1do, extP0do) // downward (connector-side) connector
+		m.metalQuad(conP1do, conP1uo, extP1uo, extP1do) // backface (radial) connector
+		m.metalQuad(extP0do, extP1do, extP1uo, extP0uo) // end-cap (end-of-spiral) connector
+		m.metalQuad(conP0uo, extP0uo, extP1uo, conP1uo) // upward (non-connector-side) connector
+	} else {
+		m.metalQuad(conP0do, extP0do, extP0uo, conP0uo) // frontface connector
+		m.metalQuad(conP0do, conP1do, extP1do, extP0do) // downward connector
+		m.metalQuad(conP1do, conP1uo, extP1uo, extP1do) // backface connector
+		m.metalQuad(extP0do, extP1do, extP1uo, extP0uo) // end-cap connector
+	}
 
 	// dielectric
 	deextP0uo := cp(&ni01).Scale(float32(m.size + 2**dielGap)).Add(deconP0uo)
@@ -586,7 +656,7 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 	}
 }
 
-func (m *arBifilarElectromagnet) coilWireSegment(wireNum, coilNum int, origA1, origA2, ri, ro float64) {
+func (m *arBifilarElectromagnet) coilWireSegment(wireNum, coilNum int, origA1, origA2, ri, ro float64, lastSegment bool) {
 	a1, a2, z1, z2, pu, pd := m.calcAnglesZsAndPs(wireNum, origA1, origA2)
 
 	p1uo := pu(ro, a1, z1)
@@ -602,6 +672,25 @@ func (m *arBifilarElectromagnet) coilWireSegment(wireNum, coilNum int, origA1, o
 	nu.Normalize()
 	nd := vec3.Cross(cp(p2do).Sub(p1do), cp(p2di).Sub(p1do))
 	nd.Normalize()
+
+	if lastSegment && coilNum == *numPairs && wireNum == 1 {
+		// special case - connect top spiral to top connector
+		// log.Printf("coilNum=%v, wireNum=%v, p1di=%#v, p1ui=%#v", coilNum, wireNum, p1di, p1ui)
+		// log.Printf("coilNum=%v, wireNum=%v, p2di=%#v, p2ui=%#v", coilNum, wireNum, p2di, p2ui)
+		// log.Printf("coilNum=%v, wireNum=%v, p1do=%#v, p1uo=%#v", coilNum, wireNum, p1do, p1uo)
+		// log.Printf("coilNum=%v, wireNum=%v, p2do=%#v, p2uo=%#v", coilNum, wireNum, p2do, p2uo)
+		// extP0do=&vec3.T{-18.268698, -4.7425447, 59.23642}, extP0uo=&vec3.T{-18.268698, -4.7425447, 58.03642}  RIGHT!!!
+		// extP1do=&vec3.T{-17.931267, -5.8912435, 59.23642}, extP1uo=&vec3.T{-17.931267, -5.8912435, 58.03642}
+		// conP1do=&vec3.T{-19.082619, -6.229455, 59.23642}, conP1uo=&vec3.T{-19.082619, -6.229455, 58.03642}  WRONG!!!
+		// p2di=&vec3.T{-18.284712, -4.7832294, 59.222164}, p2ui=&vec3.T{-18.284712, -4.7832294, 58.022167}
+		p2di = m.extP0do
+		p2ui = m.extP0uo
+
+		// conP0do=&vec3.T{-19.42005, -5.080756, 59.23642}, conP0uo=&vec3.T{-19.42005, -5.080756, 58.03642}
+		// p2do=&vec3.T{-19.445646, -5.0869265, 59.222164}, p2uo=&vec3.T{-19.445646, -5.0869265, 58.022167}
+		p2do = m.conP0do
+		p2uo = m.conP0uo
+	}
 
 	m.metalQuad(p1uo, p2uo, p2do, p1do) // outer-facing
 	m.metalQuad(p1uo, p1ui, p2ui, p2uo) // upward-facing
