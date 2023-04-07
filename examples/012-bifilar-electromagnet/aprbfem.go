@@ -29,10 +29,10 @@ var (
 	dielGap  = flag.Float64("diel_gap", 0.05, "Gap between metal and dielectric (or support material)")
 	dielPad  = flag.Float64("diel_pad", 0.3, "Padding between metal and outer edge of dielectric (or support material)")
 	innerR   = flag.Float64("inner_radius", 4.5, "Inner radius in millimeters")
-	leadLen  = flag.Float64("lead_len", 5.0, "Length of two external leads")
+	leadLen  = flag.Float64("lead_len", 4.1, "Length of two external leads")
 	numDivs  = flag.Int("num_divs", 36, "Number of divisions per rotation")
 	numPairs = flag.Int("num_pairs", 11, "Number of coil pairs")
-	numTurns = flag.Int("num_turns", 19, "Total number of turns per coil")
+	numTurns = flag.Int("num_turns", 11, "Total number of turns per coil")
 	rodThick = flag.Float64("rod_thick", 2.4, "Outer long rod (cantilever connector) thickness in millimeters")
 	wireGap  = flag.Float64("wire_gap", 0.3, "Gap between wires in millimeters")
 	wireSize = flag.Float64("wire_size", 1.2, "Width of (square) wire in millimeters")
@@ -316,19 +316,22 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 
 	// a1 is the center of the connector
 	a0, adja1, z0, adjz1 := m.calcFirstCoilParams(a1, origA1, ro)
+	da := m.size / ro
+	rodA0 := a1 - 1.5*da
+	rodAdja1 := a1 + 1.5*da
 
 	p0uo := pu(ro, a0, z0)
-	p0uoWithRod := pu(ro+m.rodThick-m.size, a0, z0)
+	p0uoWithRod := pu(ro+m.rodThick-m.size, rodA0, z0)
 	p0ui := pu(ri, a0, z0)
 	p0do := pd(ro, a0, z0)
-	p0doWithRod := pd(ro+m.rodThick-m.size, a0, z0)
+	p0doWithRod := pd(ro+m.rodThick-m.size, rodA0, z0)
 	p0di := pd(ri, a0, z0)
 
 	adjP1uo := pu(ro, adja1, adjz1)
-	adjP1uoWithRod := pu(ro+m.rodThick-m.size, adja1, adjz1)
+	adjP1uoWithRod := pu(ro+m.rodThick-m.size, rodAdja1, adjz1)
 	adjP1ui := pu(ri, adja1, adjz1)
 	adjP1do := pd(ro, adja1, adjz1)
-	adjP1doWithRod := pd(ro+m.rodThick-m.size, adja1, adjz1)
+	adjP1doWithRod := pd(ro+m.rodThick-m.size, rodAdja1, adjz1)
 	adjP1di := pd(ri, adja1, adjz1)
 
 	n := vec3.Cross(cp(p0di).Sub(p0do), cp(p0ui).Sub(p0do))
@@ -643,6 +646,7 @@ func (m *arBifilarElectromagnet) firstCoilWireSegment(wireNum, coilNum int, orig
 
 	key := fmt.Sprintf("%v,%v", 3-wireNum, coilNum-1)
 	if lc, ok := m.lowerConnectors[key]; ok {
+		// these are the "lower" (closest to external) connectors from the coil to the radial risers.
 		m.metalQuad(conP0uo, extP0uo, lc.p1, lc.p2)
 		m.metalQuad(extP1uo, conP1uo, lc.p3, lc.p4)
 		m.metalQuad(conP1uo, conP0uo, lc.p2, lc.p3)
