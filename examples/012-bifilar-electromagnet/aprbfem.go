@@ -796,10 +796,10 @@ func (m *arBifilarElectromagnet) lastCoilWireSegment(wireNum, coilNum int, origA
 	}
 
 	if coilNum == *numPairs && wireNum == 1 { // special loop-back case
-		m.metalQuad(p3di, p3do, p3uo, p3ui) // end-cap
-		m.metalQuad(p2ui, p2di, p3di, p3ui) // inner
-		m.metalQuad(p3ui, p3uo, p2uo, p2ui) // upward
-		m.metalQuad(p2di, p2do, p3do, p3di) // downward
+		// m.metalQuad(p3di, p3do, p3uo, p3ui) // end-cap
+		// m.metalQuad(p2ui, p2di, p3di, p3ui) // inner
+		// m.metalQuad(p3ui, p3uo, p2uo, p2ui) // upward
+		// m.metalQuad(p2di, p2do, p3do, p3di) // downward
 
 		// dielectric
 		m.dielQuad(dep3di, dep3do, dep3uo, dep3ui) // end-cap
