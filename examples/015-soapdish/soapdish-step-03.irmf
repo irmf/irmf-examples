@@ -3,6 +3,7 @@
   "license": "Apache-2.0",
   "date": "2019-07-19",
   "irmf": "1.0",
+  "language": "glsl",
   "materials": ["PLA1"],
   "max": [42.5,42.5,12],
   "min": [-42.5,-42.5,-12],

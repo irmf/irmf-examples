@@ -4,6 +4,7 @@
   "date": "2019-07-19",
   "encoding": "gzip+base64",
   "irmf": "1.0",
+  "language": "glsl",
   "materials": ["PLA"],
   "max": [5,5,5],
   "min": [-5,-5,-5],

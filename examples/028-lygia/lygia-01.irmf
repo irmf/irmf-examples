@@ -3,6 +3,7 @@
   "license": "Apache-2.0",
   "date": "2022-11-25",
   "irmf": "1.0",
+  "language": "glsl",
   "materials": ["jasper","sapphire","agate","emerald"],
   "max": [3,3,3],
   "min": [-3,-3,-3],

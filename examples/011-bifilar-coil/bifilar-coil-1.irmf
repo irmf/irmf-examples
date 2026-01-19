@@ -3,6 +3,7 @@
   "license": "Apache-2.0",
   "date": "2020-02-13",
   "irmf": "1.0",
+  "language": "glsl",
   "materials": ["copper","copper"],
   "max": [22,22,0.425],
   "min": [-22,-22,-0.425],
