@@ -1,6 +1,6 @@
 module github.com/gmlewis/irmf-examples
 
-go 1.20
+go 1.25
 
 require (
 	github.com/gmlewis/go3d v0.0.2

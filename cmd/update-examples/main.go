@@ -6,7 +6,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -35,7 +34,7 @@ func main() {
 			return nil
 		}
 		if info.Name() == "README.md" {
-			buf, err := ioutil.ReadFile(path)
+			buf, err := os.ReadFile(path)
 			if err != nil {
 				return fmt.Errorf("ReadFile(%q): %v", path, err)
 			}
@@ -55,7 +54,7 @@ func main() {
 			return nil
 		}
 		if strings.HasSuffix(path, ".irmf") {
-			buf, err := ioutil.ReadFile(path)
+			buf, err := os.ReadFile(path)
 			if err != nil {
 				return fmt.Errorf("ReadFile(%q): %v", path, err)
 			}
@@ -132,7 +131,7 @@ func processReadme(path, buf string, irmfs map[string]string, stlFileSizes map[s
 			licenseText = v[j:] // Preserve year of original license text.
 		}
 
-		parts[i] = "## " + v[0:glslIndex+8] + glsl + "```\n\n" + tryMessage(path, filename) + addSlicerMessage(filename)
+		parts[i] = "## " + v[0:glslIndex+8] + glsl + "```\n\n" + tryMessage(path, filename) + addSlicerMessage()
 
 		if len(dlpFileSizes) > 0 {
 			parts[i] += addDLPs(filename, dlpFileSizes)
@@ -141,12 +140,12 @@ func processReadme(path, buf string, irmfs map[string]string, stlFileSizes map[s
 	parts = append(parts, licenseText)
 
 	outbuf := []byte(strings.Join(parts, "\n"))
-	if err := ioutil.WriteFile(path+"/README.md", outbuf, 0644); err != nil {
+	if err := os.WriteFile(path+"/README.md", outbuf, 0644); err != nil {
 		log.Fatalf("WriteFile: %v", err)
 	}
 }
 
-func addSlicerMessage(filename string) string {
+func addSlicerMessage() string {
 	return "\n* Use [irmf-slicer](https://github.com/gmlewis/irmf-slicer) to generate an STL or voxel approximation.\n"
 }
 

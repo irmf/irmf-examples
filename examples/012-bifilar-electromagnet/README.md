@@ -1,5 +1,9 @@
 # 012-bifilar-electromagnet
 
+**NOTE**: For a more modern design of the bifilar electromagnet with
+a stronger wire cage and support material to hold the coils, please see:
+https://github.com/gmlewis/moonbit-step/tree/master/examples/12-bifilar-electromagnet#012-bifilar-electromagnet
+
 ## bifilar-electromagnet-1.irmf
 
 This is the model I wanted to build using convential CAD tools that simply
@@ -51,17 +55,17 @@ and here's an animation of the slices of the electromagnet:
 float coilSquareFace(float radius, float size, float gap, float nTurns, float trimEndAngle, in vec3 xyz) {
   // First, trivial reject on the two vertical ends of the coil.
   if (xyz.z < -0.5 * size || xyz.z > nTurns * (size + gap) + 0.5 * size) { return 0.0; }
-  
+
   // Then, constrain the coil to the cylinder with wall thickness "size":
   float rxy = length(xyz.xy);
   if (rxy < radius - 0.5 * size || rxy > radius + 0.5 * size) { return 0.0; }
-  
+
   // If the current point is between the coils, return no material:
   float angle = atan(xyz.y, xyz.x) / (2.0 * M_PI);
   if (angle < 0.0) { angle += 1.0; } // 0 <= angle <= 1 between coils from center to center.
   // 0 <= dz <= (size+gap) between coils from center to center.
   float dz = mod(xyz.z, size + gap);
-  
+
   float lastHelixZ = angle * (size + gap);
   float coilNum = 0.0;
   if (lastHelixZ > dz) {
@@ -69,17 +73,17 @@ float coilSquareFace(float radius, float size, float gap, float nTurns, float tr
     coilNum = -1.0;
   }
   float nextHelixZ = lastHelixZ + (size + gap); // center of next higher vertical coil.
-  
+
   // If the current point is within the gap between the two coils, reject it.
   if (dz > lastHelixZ + 0.5 * size && dz < nextHelixZ - 0.5 * size) { return 0.0; }
-  
+
   coilNum += floor((xyz.z + (0.5 * size) - lastHelixZ) / (size + gap));
-  
+
   // If the current point is in a coil numbered outside the current range, reject it.
   if (coilNum < 0.0 || coilNum >= nTurns) { return 0.0; }
-  
+
   // TODO: Incorporate the trimEndAngle.
-  
+
   return 1.0;
 }
 
@@ -125,15 +129,15 @@ float coilPlusConnectorWires(int coilNum, int numCoils, float inc, float innerRa
   }
   xyz = (vec4(xyz, 1.0) * xfm).xyz;
   float coil = coilSquareFace(coilRadius, size, gap, nTurns, trimEndAngle, xyz);
-  
+
   float bz = -(size + gap);
   float tz = nTurns * (size + gap);
   float tzp1 = (nTurns + 1.0) * (size + gap);
-  
+
   coil += box(vec3(coilRadius, 0.0, 0.0), vec3(coilRadius, 0.0, bz), size, xyz);
   coil += box(vec3(coilRadius, 0.0, bz), vec3(connectorRadius, 0.0, bz), size, xyz);
   coil += box(vec3(connectorRadius, 0.0, bz), vec3(connectorRadius, 0.0, tzp1), size, xyz);
-  
+
   float zexit = (nTurns + 10.0) * (size + gap);
   if (coilNum >= 3) { // Connect the start of this coil to the end of two coils prior.
     float lastCoilRadius = radiusOffset - 2.0 + innerRadius;
@@ -147,25 +151,25 @@ float coilPlusConnectorWires(int coilNum, int numCoils, float inc, float innerRa
     // Start of coil1:
     coil += box(vec3(connectorRadius, 0.0, tz), vec3(connectorRadius, 0.0, zexit), size, xyz);
   }
-  
+
   if (coilNum == numCoils) { // Special case to access the exit wire.
     // End of coil 'numCoils':
     xfm = mat4(1) * rotZ(0.5 * inc);
     xyz = (vec4(xyz, 1.0) * xfm).xyz;
     coil += box(vec3(connectorRadius - (size + gap), 0.0, tz), vec3(connectorRadius - (size + gap), 0.0, zexit), size, xyz);
   }
-  
+
   return coil;
 }
 
 float cylinder(float radius, float height, in vec3 xyz) {
   // First, trivial reject on the two ends of the cylinder.
   if (xyz.z < 0.0 || xyz.z > height) { return 0.0; }
-  
+
   // Then, constrain radius of the cylinder:
   float rxy = length(xyz.xy);
   if (rxy > radius) { return 0.0; }
-  
+
   return 1.0;
 }
 
@@ -174,22 +178,22 @@ vec3 bifilarElectromagnet(int numPairs, float innerRadius, float size, float gap
   int numCoils = 2*numPairs;
   float inc = 2.0 * M_PI / float(numCoils);
   float connectorRadius = innerRadius + float(numCoils) * (size + gap);
-  
+
   float metal1 = 0.0;
   float metal2 = 0.0;
-  
+
   for(int i = 1; i <= numCoils; i += 2) {
     metal1 += coilPlusConnectorWires(i, numCoils, inc, innerRadius, connectorRadius, size, gap, nTurns, xyz);
     metal2 += coilPlusConnectorWires(i + 1, numCoils, inc, innerRadius, connectorRadius, size, gap, nTurns, xyz);
   }
   metal1 = clamp(metal1, 0.0, 1.0);
   metal2 = clamp(metal2, 0.0, 1.0);
-  
+
   float dielectric = 0.0;
   float dielectricRadius = 2.0 * float(numPairs) * (size + gap) + innerRadius + gap;
   float dielectricHeight = (nTurns + 4.0) * (size + gap);
   dielectric += cylinder(dielectricRadius, dielectricHeight, xyz + vec3(0, 0, 2));
-  
+
   float spindleRadius = 2.0 * float(numPairs + 1) * (size + gap) + innerRadius;
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz + vec3(0, 0, 2));
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz - vec3(0, 0, dielectricHeight - 4.0));
@@ -197,7 +201,7 @@ vec3 bifilarElectromagnet(int numPairs, float innerRadius, float size, float gap
   // This next step is important... we don't want any dielectric material wherever
   // the metal is located, so we just subtract the metal out of the dielectric.
   dielectric -= clamp(metal1 + metal2, 0.0, 1.0);
-  
+
   return vec3(metal1, metal2, dielectric);
 }
 
@@ -246,17 +250,17 @@ axial direction!
 float coilSquareFace(in float radius, in float size, in float gap, in int nTurns, in float trimStartAngle, in float trimEndAngle, in vec3 xyz) {
   // First, trivial reject on the two vertical ends of the coil.
   if (xyz.z < -0.5 * size || xyz.z > float(nTurns) * (size + gap) + 0.5 * size) { return 0.0; }
-  
+
   // Then, constrain the coil to the cylinder with wall thickness "size":
   float rxy = length(xyz.xy);
   if (rxy < radius - 0.5 * size || rxy > radius + 0.5 * size) { return 0.0; }
-  
+
   // If the current point is between the coils, return no material:
   float angle = atan(xyz.y, xyz.x) / (2.0 * M_PI);
   if (angle < 0.0) { angle += 1.0; } // 0 <= angle <= 1 between coils from center to center.
   // 0 <= dz <= (size+gap) between coils from center to center.
   float dz = mod(xyz.z, size + gap);
-  
+
   float lastHelixZ = angle * (size + gap);
   float coilNum = 0.0;
   if (lastHelixZ > dz) {
@@ -264,24 +268,24 @@ float coilSquareFace(in float radius, in float size, in float gap, in int nTurns
     coilNum = -1.0;
   }
   float nextHelixZ = lastHelixZ + (size + gap); // center of next higher vertical coil.
-  
+
   // If the current point is within the gap between the two coils, reject it.
   if (dz > lastHelixZ + 0.5 * size && dz < nextHelixZ - 0.5 * size) { return 0.0; }
-  
+
   coilNum += floor((xyz.z + (0.5 * size) - lastHelixZ) / (size + gap));
-  
+
   // If the current point is in a coil numbered outside the current range, reject it.
   if (coilNum < 0.0 || coilNum >= float(nTurns)) { return 0.0; }
-  
+
   // For the last two checks, convert angle back to radians.
   angle *= (2.0 * M_PI);
-  
+
   // If the current point is in the first coil, use the trimStartAngle.
   if (coilNum < 1.0) { return angle >= trimStartAngle ? 1.0 : 0.0; }
-  
+
   // If the current point is in the last coil, use the trimEndAngle.
   if (coilNum >= float(nTurns) - 1.0 && trimEndAngle > 0.0) { return angle <= trimEndAngle ? 1.0 : 0.0; }
-  
+
   return 1.0;
 }
 
@@ -321,13 +325,13 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
   mat4 xfm = mat4(1) * rotZ(radiusOffset * inc);
   float coilRadius = radiusOffset + innerRadius;
   float trimStartAngle = inc - 0.1; // This is a hack that works for numCoils=10 and may need adjusting for other values.
-  
+
   xyz = (vec4(xyz, 1.0) * xfm).xyz;
   float coil = coilSquareFace(coilRadius, size, gap, nTurns, trimStartAngle, 0.0, xyz);
-  
+
   float tz = float(nTurns) * (size + gap);
   float zexit = (float(nTurns) + 10.0) * (size + gap);
-  
+
   if (coilNum == numCoils) {
     // Special case to access the exit wires.
     if (wireNum == 1) {
@@ -350,18 +354,18 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
     coil += box(vec3(coilRadius, 0, - size), vec3(connectorRadius, 0, - size), size, xyz);
     coil += box(vec3(coilRadius, 0, - size), vec3(coilRadius, 0, 0), size, xyz);
   }
-  
+
   return clamp(coil, 0.0, 1.0);
 }
 
 float cylinder(float radius, float height, in vec3 xyz) {
   // First, trivial reject on the two ends of the cylinder.
   if (xyz.z < 0.0 || xyz.z > height) { return 0.0; }
-  
+
   // Then, constrain radius of the cylinder:
   float rxy = length(xyz.xy);
   if (rxy > radius) { return 0.0; }
-  
+
   return 1.0;
 }
 
@@ -369,25 +373,25 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   float nTurns = float(numTurns);
   float inc = M_PI / float(numPairs);
   float connectorRadius = innerRadius + float(numPairs) * (size + gap);
-  
+
   float metal1 = 0.0;
   float metal2 = 0.0;
-  
+
   mat4 xfm = mat4(1) * rotZ(M_PI);
   vec3 xyz180Z = (vec4(xyz, 1.0) * xfm).xyz;
-  
+
   for(int i = 1; i <= numPairs; i ++ ) {
     metal1 += coilPlusConnectorWires(1, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz);
     metal2 += coilPlusConnectorWires(2, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz180Z);
   }
   metal1 = clamp(metal1, 0.0, 1.0);
   metal2 = clamp(metal2 - metal1, 0.0, 1.0); // Don't double the metals on overlap.
-  
+
   float dielectric = 0.0;
   float dielectricRadius = 2.0 * float(numPairs) * (size + gap) + innerRadius + gap;
   float dielectricHeight = (nTurns + 4.0) * (size + gap);
   dielectric += cylinder(dielectricRadius, dielectricHeight, xyz + vec3(0, 0, 2));
-  
+
   float spindleRadius = 2.0 * float(numPairs + 1) * (size + gap) + innerRadius;
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz + vec3(0, 0, 2));
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz - vec3(0, 0, dielectricHeight - 4.0));
@@ -395,7 +399,7 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   // This next step is important... we don't want any dielectric material wherever
   // the metal is located, so we just subtract the metal out of the dielectric.
   dielectric -= clamp(metal1 + metal2, 0.0, 1.0);
-  
+
   return vec3(metal1, metal2, dielectric);
 }
 
@@ -429,17 +433,17 @@ Here is the full model only showing the metal:
 float coilSquareFace(in float radius, in float size, in float gap, in int nTurns, in float trimStartAngle, in float trimEndAngle, in vec3 xyz) {
   // First, trivial reject on the two vertical ends of the coil.
   if (xyz.z < -0.5 * size || xyz.z > float(nTurns) * (size + gap) + 0.5 * size) { return 0.0; }
-  
+
   // Then, constrain the coil to the cylinder with wall thickness "size":
   float rxy = length(xyz.xy);
   if (rxy < radius - 0.5 * size || rxy > radius + 0.5 * size) { return 0.0; }
-  
+
   // If the current point is between the coils, return no material:
   float angle = atan(xyz.y, xyz.x) / (2.0 * M_PI);
   if (angle < 0.0) { angle += 1.0; } // 0 <= angle <= 1 between coils from center to center.
   // 0 <= dz <= (size+gap) between coils from center to center.
   float dz = mod(xyz.z, size + gap);
-  
+
   float lastHelixZ = angle * (size + gap);
   float coilNum = 0.0;
   if (lastHelixZ > dz) {
@@ -447,24 +451,24 @@ float coilSquareFace(in float radius, in float size, in float gap, in int nTurns
     coilNum = -1.0;
   }
   float nextHelixZ = lastHelixZ + (size + gap); // center of next higher vertical coil.
-  
+
   // If the current point is within the gap between the two coils, reject it.
   if (dz > lastHelixZ + 0.5 * size && dz < nextHelixZ - 0.5 * size) { return 0.0; }
-  
+
   coilNum += floor((xyz.z + (0.5 * size) - lastHelixZ) / (size + gap));
-  
+
   // If the current point is in a coil numbered outside the current range, reject it.
   if (coilNum < 0.0 || coilNum >= float(nTurns)) { return 0.0; }
-  
+
   // For the last two checks, convert angle back to radians.
   angle *= (2.0 * M_PI);
-  
+
   // If the current point is in the first coil, use the trimStartAngle.
   if (coilNum < 1.0) { return angle >= trimStartAngle ? 1.0 : 0.0; }
-  
+
   // If the current point is in the last coil, use the trimEndAngle.
   if (coilNum >= float(nTurns) - 1.0 && trimEndAngle > 0.0) { return angle <= trimEndAngle ? 1.0 : 0.0; }
-  
+
   return 1.0;
 }
 
@@ -506,13 +510,13 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
   mat4 xfm = mat4(1) * rotZ(spacingAngle);
   float coilRadius = radiusOffset + innerRadius;
   float trimStartAngle = 0.05; // experimental - works somewhat for numPairs=20, but not ideal.
-  
+
   xyz = (vec4(xyz, 1.0) * xfm).xyz;
   float coil = coilSquareFace(coilRadius, size, gap, nTurns, trimStartAngle, 0.0, xyz);
-  
+
   float tz = float(nTurns) * (size + gap);
   float zexit = (float(nTurns) + 10.0) * (size + gap);
-  
+
   if (coilNum == numCoils) {
     // Special case to access the exit wires.
     if (wireNum == 1) {
@@ -535,18 +539,18 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
     coil += box(vec3(coilRadius, 0, - size), vec3(connectorRadius, 0, - size), size, xyz);
     coil += box(vec3(coilRadius, 0, - size), vec3(coilRadius, 0, 0), size, xyz);
   }
-  
+
   return clamp(coil, 0.0, 1.0);
 }
 
 float cylinder(float radius, float height, in vec3 xyz) {
   // First, trivial reject on the two ends of the cylinder.
   if (xyz.z < 0.0 || xyz.z > height) { return 0.0; }
-  
+
   // Then, constrain radius of the cylinder:
   float rxy = length(xyz.xy);
   if (rxy > radius) { return 0.0; }
-  
+
   return 1.0;
 }
 
@@ -554,24 +558,24 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   float nTurns = float(numTurns);
   float inc = M_PI / float(numPairs);
   float connectorRadius = innerRadius + float(numPairs) * (size + gap);
-  
+
   float metal1 = 0.0;
   float metal2 = 0.0;
-  
+
   mat4 xfm = mat4(1) * rotZ(M_PI);
   vec3 xyz180Z = (vec4(xyz, 1.0) * xfm).xyz;
-  
+
   for(int i = 1; i <= numPairs; i ++ ) {
     metal1 += coilPlusConnectorWires(1, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz);
     metal2 += coilPlusConnectorWires(2, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz180Z);
   }
   metal1 = clamp(metal1, 0.0, 1.0);
   metal2 = clamp(metal2 - metal1, 0.0, 1.0); // Don't double the metals on overlap.
-  
+
   float dielectricRadius = float(numPairs) * (size + gap) + innerRadius + gap;
   float dielectricHeight = 2.0 * (nTurns + 2.0) * (size + gap);
   float dielectric = cylinder(dielectricRadius, dielectricHeight, xyz + vec3(0, 0, 2));
-  
+
   float spindleRadius = float(numPairs + 1) * (size + gap) + innerRadius;
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz + vec3(0, 0, 2));
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz - vec3(0, 0, dielectricHeight - 4.0));
@@ -579,7 +583,7 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   // This next step is important... we don't want any dielectric material wherever
   // the metal is located, so we just subtract the metal out of the dielectric.
   dielectric = clamp(dielectric - metal1 - metal2, 0.0, 1.0);
-  
+
   return vec3(metal1, metal2, dielectric);
 }
 
@@ -613,17 +617,17 @@ Here is the full model with metal and dielectric:
 float coilSquareFace(in float radius, in float size, in float gap, in int nTurns, in float trimStartAngle, in float trimEndAngle, in vec3 xyz) {
   // First, trivial reject on the two vertical ends of the coil.
   if (xyz.z < -0.5 * size || xyz.z > float(nTurns) * (size + gap) + 0.5 * size) { return 0.0; }
-  
+
   // Then, constrain the coil to the cylinder with wall thickness "size":
   float rxy = length(xyz.xy);
   if (rxy < radius - 0.5 * size || rxy > radius + 0.5 * size) { return 0.0; }
-  
+
   // If the current point is between the coils, return no material:
   float angle = atan(xyz.y, xyz.x) / (2.0 * M_PI);
   if (angle < 0.0) { angle += 1.0; } // 0 <= angle <= 1 between coils from center to center.
   // 0 <= dz <= (size+gap) between coils from center to center.
   float dz = mod(xyz.z, size + gap);
-  
+
   float lastHelixZ = angle * (size + gap);
   float coilNum = 0.0;
   if (lastHelixZ > dz) {
@@ -631,24 +635,24 @@ float coilSquareFace(in float radius, in float size, in float gap, in int nTurns
     coilNum = -1.0;
   }
   float nextHelixZ = lastHelixZ + (size + gap); // center of next higher vertical coil.
-  
+
   // If the current point is within the gap between the two coils, reject it.
   if (dz > lastHelixZ + 0.5 * size && dz < nextHelixZ - 0.5 * size) { return 0.0; }
-  
+
   coilNum += floor((xyz.z + (0.5 * size) - lastHelixZ) / (size + gap));
-  
+
   // If the current point is in a coil numbered outside the current range, reject it.
   if (coilNum < 0.0 || coilNum >= float(nTurns)) { return 0.0; }
-  
+
   // For the last two checks, convert angle back to radians.
   angle *= (2.0 * M_PI);
-  
+
   // If the current point is in the first coil, use the trimStartAngle.
   if (coilNum < 1.0) { return angle >= trimStartAngle ? 1.0 : 0.0; }
-  
+
   // If the current point is in the last coil, use the trimEndAngle.
   if (coilNum >= float(nTurns) - 1.0 && trimEndAngle > 0.0) { return angle <= trimEndAngle ? 1.0 : 0.0; }
-  
+
   return 1.0;
 }
 
@@ -690,13 +694,13 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
   mat4 xfm = mat4(1) * rotZ(spacingAngle);
   float coilRadius = radiusOffset + innerRadius;
   float trimStartAngle = 0.05; // experimental - works somewhat for numPairs=20, but not ideal.
-  
+
   xyz = (vec4(xyz, 1.0) * xfm).xyz;
   float coil = coilSquareFace(coilRadius, size, gap, nTurns, trimStartAngle, 0.0, xyz);
-  
+
   float tz = float(nTurns) * (size + gap);
   float zexit = (float(nTurns) + 10.0) * (size + gap);
-  
+
   if (coilNum == numCoils) {
     // Special case to access the exit wires.
     if (wireNum == 1) {
@@ -719,18 +723,18 @@ float coilPlusConnectorWires(in int wireNum, in int coilNum, in int numCoils, in
     coil += box(vec3(coilRadius, 0, - size), vec3(connectorRadius, 0, - size), size, xyz);
     coil += box(vec3(coilRadius, 0, - size), vec3(coilRadius, 0, 0), size, xyz);
   }
-  
+
   return clamp(coil, 0.0, 1.0);
 }
 
 float cylinder(float radius, float height, in vec3 xyz) {
   // First, trivial reject on the two ends of the cylinder.
   if (xyz.z < 0.0 || xyz.z > height) { return 0.0; }
-  
+
   // Then, constrain radius of the cylinder:
   float rxy = length(xyz.xy);
   if (rxy > radius) { return 0.0; }
-  
+
   return 1.0;
 }
 
@@ -738,24 +742,24 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   float nTurns = float(numTurns);
   float inc = M_PI / float(numPairs);
   float connectorRadius = innerRadius + float(numPairs) * (size + gap);
-  
+
   float metal1 = 0.0;
   float metal2 = 0.0;
-  
+
   mat4 xfm = mat4(1) * rotZ(M_PI);
   vec3 xyz180Z = (vec4(xyz, 1.0) * xfm).xyz;
-  
+
   for(int i = 1; i <= numPairs; i ++ ) {
     metal1 += coilPlusConnectorWires(1, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz);
     metal2 += coilPlusConnectorWires(2, i, numPairs, inc, innerRadius, connectorRadius, size, gap, numTurns, xyz180Z);
   }
   metal1 = clamp(metal1, 0.0, 1.0);
   metal2 = clamp(metal2 - metal1, 0.0, 1.0); // Don't double the metals on overlap.
-  
+
   float dielectricRadius = float(numPairs) * (size + gap) + innerRadius + gap;
   float dielectricHeight = 2.0 * (nTurns + 2.0) * (size + gap);
   float dielectric = cylinder(dielectricRadius, dielectricHeight, xyz + vec3(0, 0, 2));
-  
+
   float spindleRadius = float(numPairs + 1) * (size + gap) + innerRadius;
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz + vec3(0, 0, 2));
   dielectric += cylinder(spindleRadius, 2.0 * (size + gap), xyz - vec3(0, 0, dielectricHeight - 4.0));
@@ -763,7 +767,7 @@ vec3 arBifilarElectromagnet(int numPairs, float innerRadius, float size, float g
   // This next step is important... we don't want any dielectric material wherever
   // the metal is located, so we just subtract the metal out of the dielectric.
   dielectric = clamp(dielectric - metal1 - metal2, 0.0, 1.0);
-  
+
   return vec3(metal1, metal2, dielectric);
 }
 

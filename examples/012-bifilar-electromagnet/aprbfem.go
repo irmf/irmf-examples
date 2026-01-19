@@ -47,7 +47,7 @@ func main() {
 	flag.Parse()
 
 	if *dielGap*2 >= *wireGap {
-		log.Fatal("-diel_gap (%v) must be less than half the -wire_gap (%v)", *dielGap, *wireGap)
+		log.Fatalf("-diel_gap (%v) must be less than half the -wire_gap (%v)", *dielGap, *wireGap)
 	}
 
 	w1, err := stl.New(*filename)
@@ -217,7 +217,7 @@ func (m *arBifilarElectromagnet) coilPlusConnectorWires(wireNum, coilNum int) {
 	for i := 0; i < *numDivs**numTurns; i, angle, dielAngle = i+1, angle+delta, dielAngle+dielDelta {
 		lastSegment := i == *numDivs**numTurns-1
 		m.coilWireSegment(wireNum, coilNum, angle+spacingAngle, angle+delta+spacingAngle, ri, ro, lastSegment)
-		m.coilDielSegment(wireNum, coilNum, dielAngle+spacingAngle, dielAngle+dielDelta+spacingAngle, ri, ro)
+		m.coilDielSegment(wireNum, dielAngle+spacingAngle, dielAngle+dielDelta+spacingAngle, ri, ro)
 		if lastSegment {
 			m.lastCoilWireSegment(wireNum, coilNum, angle+spacingAngle, angle+delta+spacingAngle, ri, ro)
 		}
@@ -702,7 +702,7 @@ func (m *arBifilarElectromagnet) coilWireSegment(wireNum, coilNum int, origA1, o
 	m.metalQuad(p1do, p2do, p2di, p1di) // downward-facing
 }
 
-func (m *arBifilarElectromagnet) coilDielSegment(wireNum, coilNum int, origA1, origA2, ri, ro float64) {
+func (m *arBifilarElectromagnet) coilDielSegment(wireNum int, origA1, origA2, ri, ro float64) {
 	a1, a2, z1, z2, pu, pd := m.calcAnglesZsAndPs(wireNum, origA1, origA2)
 
 	// dielectric
